@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="drupal_build" default="build" phingVersion="2.6.1"
+  description="Drupal build.xml. It handels install and update of drupal projects and other common tasks">
+  <target name="build" depends="init"
+    description="Target will try to update the project or it will try to checkout it if the one does not exist">
+
+  </target>
+
+  <target name="init" depends="properties-load" unless="targets.init.done"
+    hidden="true">
+    <!-- Include phing extensions -->
+    <includepath classpath="phing_ext" />
+    <taskdef name="drush" classname="DrushTask" />
+
+    <!-- Init project properties -->
+    <property name="project.tmp" value="${project.basedir}/tmp" />
+    <property name="project.www" value="${project.basedir}/www" />
+    <php function="time" returnProperty="project.timestamp" />
+
+    <!-- Init drush task properties -->
+    <property name="drush.root" value="${project.www}" />
+
+    <!-- Create working dirs -->
+    <mkdir dir="${project.basedir}/tmp" mode="0775" />
+    <mkdir dir="${project.basedir}/www" mode="0775" />
+
+    <property name="targets.init.done" value="true" />
+  </target>
+
+  <!-- Load property files -->
+  <target name="properties-load" unless="targets.properties-load.done"
+    hidden="true">
+
+    <!-- By default use default properties file `build.default.properties` -->
+    <property file="${project.basedir}/build.default.properties"
+      override="true" />
+
+    <!-- Allow override using `build.properties` in build file directory -->
+    <!-- Include the file after each standard properties file -->
+    <property file="${project.basedir}/build.properties"
+      override="true" />
+
+    <!-- Allow override using `build.env.properties` in build file directory 
+      based on the environment -->
+    <property file="${project.basedir}/build.${project.env}.properties"
+      override="true" />
+
+    <!-- Allow override using `build.properties` in build file directory -->
+    <!-- Include the file after each standard properties file -->
+    <property file="${project.basedir}/build.properties"
+      override="true" />
+
+    <!-- Set property to prevent unnecessary additional invocations of this 
+      target -->
+    <property name="targets.properties-load.done" value="true" />
+  </target>
+
+  <target name="project-create" depends="init"
+    unless="targets.project-create.done" description="Initialize a new project">
+    <phingcall target="clean" />
+
+    <!-- Create working dirs -->
+    <mkdir dir="${project.basedir}/tmp" mode="0775" />
+
+    <drush command="pm-download" assume="yes">
+      <option name="root" value="${project.basedir}" />
+      <option name="drupal-project-rename" value="www" />
+      <param>drupal</param>
+    </drush>
+
+    <mkdir dir="${project.www}/sites/all/modules/contrib" />
+    <touch file="${project.www}/sites/all/modules/contrib/README.txt" />
+    <mkdir dir="${project.www}/sites/all/modules/custom" />
+    <touch file="${project.www}/sites/all/modules/custom/README.txt" />
+    <mkdir dir="${project.www}/sites/all/modules/features" />
+    <touch file="${project.www}/sites/all/modules/features/README.txt" />
+    
+    <drush command="pm-download" assume="yes">
+      <param>devel</param>
+    </drush>
+
+    <phingcall target="project-create-profile" />
+
+
+
+    <property name="targets.project-create.done" value="true" />
+  </target>
+
+  <target name="project-create-profile" depends="init"
+    unless="targets.project-create-profile.done" hidden="true">
+
+    <copy todir="${project.www}/profiles/${drupal.profile}">
+      <fileset dir="${project.www}/profiles/standard">
+        <include name="**" />
+      </fileset>
+      <filterchain>
+        <replaceregexp>
+          <regexp pattern="standard_" replace="${drupal.profile}_" />
+          <regexp pattern="name = Standard" replace="name = ${drupal.profile}" />
+        </replaceregexp>
+      </filterchain>
+    </copy>
+    <move todir="${project.www}/profiles/${drupal.profile}">
+      <fileset dir="${project.www}/profiles/${drupal.profile}">
+        <include name="*" />
+      </fileset>
+      <mapper type="regexp" from="^standard.([a-z]+)$" to="${drupal.profile}.\1" />
+    </move>
+
+    <property name="targets.project-create-profile.done" value="true" />
+
+    <gitinit repository="${project.www}" gitPath="${system.git}" />
+    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
+      create="true" gitPath="${system.git}"/>
+    <exec dir="${project.www}" checkreturn="true" passthru="true"
+      command="${system.git} add ." />
+    <gitcommit repository="${project.www}" message="Init project"
+      allFiles="true" gitPath="${system.git}"/>
+      
+    <exec dir="${project.www}" checkreturn="true" passthru="true"
+      command="${system.git} remote add origin ${drupal.repo_url}" />
+      
+    <gitpush
+    repository="${project.www}" refspec="${drupal.repo_branch}:${drupal.repo_branch}" destination="${drupal.repo_url}" gitPath="${system.git}"/>
+  </target>
+
+  <target name="clean" depends="init" unless="targets.clean.done"
+    description="Clean all project files and directories">
+    <property name="clean.trash-folder"
+      value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
+    <mkdir dir="${clean.trash-folder}" mode="0775" />
+
+    <exec command="mv ${project.www} ${clean.trash-folder}" />
+    <exec command="mv ${project.tmp} ${clean.trash-folder}" />
+
+    <delete dir="${clean.trash-folder}" includeemptydirs="true"
+      quiet="true" />
+
+    <property name="targets.clean.done" value="true" />
+  </target>
+
+  <target name="clean-tmp" depends="init" unless="targets.clean.done"
+    description="Clean all project files and directories">
+    <property name="clean.trash-folder"
+      value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
+    <mkdir dir="${clean.trash-folder}" mode="0775" />
+
+    <exec command="mv ${project.tmp} ${clean.trash-folder}" />
+
+    <delete dir="${clean.trash-folder}" includeemptydirs="true"
+      quiet="true" />
+
+    <property name="targets.clean.done" value="true" />
+  </target>
+
+</project>
