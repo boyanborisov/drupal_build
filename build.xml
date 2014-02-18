@@ -75,21 +75,47 @@
     <touch file="${project.www}/sites/all/modules/custom/README.txt" />
     <mkdir dir="${project.www}/sites/all/modules/features" mode="0775" />
     <touch file="${project.www}/sites/all/modules/features/README.txt" />
-    
+
     <chmod file="${project.www}/sites/default/default.settings.php"
-          mode="0775" failonerror="true" />
+      mode="0775" failonerror="true" />
 
     <drush command="pm-download" assume="yes">
       <param>devel</param>
     </drush>
+    <drush command="pm-download" assume="yes">
+      <param>features</param>
+    </drush>
 
     <phingcall target="project-create-profile" />
+
+    <gitinit repository="${project.www}" gitPath="${system.git}" />
+    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
+      create="true" gitPath="${system.git}" />
+    <exec level="info" dir="${project.www}" checkreturn="true"
+      passthru="true" command="${system.git} add ." />
+    <gitcommit repository="${project.www}" message="Init project"
+      allFiles="true" gitPath="${system.git}" />
+
+    <exec level="info" dir="${project.www}" checkreturn="true"
+      passthru="true" command="${system.git} remote add origin ${drupal.repo_url}" />
+
+    <gitpush repository="${project.www}"
+      refspec="${drupal.repo_branch}:${drupal.repo_branch}" destination="${drupal.repo_url}"
+      gitPath="${system.git}" />
+
+    <gitfetch repository="${project.www}" gitPath="${system.git}"
+      all="true" />
+
+    <exec level="info" dir="${project.www}" checkreturn="true"
+      passthru="true"
+      command="${system.git} branch --set-upstream-to=origin/${drupal.repo_branch} ${drupal.repo_branch}" />
+
 
     <property name="targets.project-create.done" value="true" />
   </target>
 
   <target name="project-create-profile" depends="init"
-    unless="targets.project-create-profile.done" hidden="true">
+    unless="targets.project-create-profile.done" description="Create a custom profile based on Standard Drupal profile">
 
     <copy todir="${project.www}/profiles/${drupal.profile}">
       <fileset dir="${project.www}/profiles/standard">
@@ -109,21 +135,6 @@
       <mapper type="regexp" from="^standard.([a-z]+)$" to="${drupal.profile}.\1" />
     </move>
 
-    <gitinit repository="${project.www}" gitPath="${system.git}" />
-    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
-      create="true" gitPath="${system.git}" />
-    <exec dir="${project.www}" checkreturn="true" passthru="true"
-      command="${system.git} add ." />
-    <gitcommit repository="${project.www}" message="Init project"
-      allFiles="true" gitPath="${system.git}" />
-
-    <exec dir="${project.www}" checkreturn="true" passthru="true"
-      command="${system.git} remote add origin ${drupal.repo_url}" />
-
-    <gitpush repository="${project.www}"
-      refspec="${drupal.repo_branch}:${drupal.repo_branch}" destination="${drupal.repo_url}"
-      gitPath="${system.git}" />
-
     <property name="targets.project-create-profile.done" value="true" />
   </target>
 
@@ -133,8 +144,8 @@
       value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
     <mkdir dir="${clean.trash-folder}" mode="0775" />
 
-    <exec command="mv ${project.www} ${clean.trash-folder}" />
-    <exec command="mv ${project.tmp} ${clean.trash-folder}" />
+    <exec level="info" command="mv ${project.www} ${clean.trash-folder}" />
+    <exec level="info" command="mv ${project.tmp} ${clean.trash-folder}" />
 
     <delete dir="${clean.trash-folder}" includeemptydirs="true"
       quiet="true" />
@@ -148,7 +159,7 @@
       value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
     <mkdir dir="${clean.trash-folder}" mode="0775" />
 
-    <exec command="mv ${project.tmp} ${clean.trash-folder}" />
+    <exec level="info" command="mv ${project.tmp} ${clean.trash-folder}" />
 
     <delete dir="${clean.trash-folder}" includeemptydirs="true"
       quiet="true" />
@@ -156,7 +167,8 @@
     <property name="targets.clean-tmp.done" value="true" />
   </target>
 
-  <target name="site-setup" depends="init" unless="targets.site-setup.done" description="Checkout the code and install the site">
+  <target name="site-setup" depends="init" unless="targets.site-setup.done"
+    description="Checkout the code and install the site">
     <phingcall target="clean" />
     <phingcall target="site-checkout" />
     <phingcall target="site-install" />
@@ -164,14 +176,20 @@
     <property name="targets.site-setup.done" value="true" />
   </target>
 
-  <target name="site-update" depends="init" unless="targets.site-update.done" description="Update the web site">
-    <phingcall target="site-backup-tmp" />
-    <phingcall target="site-checkout" />
+  <target name="site-update" depends="init" unless="targets.site-update.done"
+    description="Update the web site">
+    <gitpull repository="${project.www}" gitPath="${system.git}" />
+    <drush command="updatedb" assume="yes" />
+    <drush command="pm-enable" assume="yes">
+      <param>${drupal.profile}</param>
+    </drush>
+    <phingcall target="drush-fr-all" />
 
     <property name="targets.site-update.done" value="true" />
   </target>
 
-  <target name="site-install" depends="init" unless="targets.site-install.done" description="Install the web site">
+  <target name="site-install" depends="init" unless="targets.site-install.done"
+    description="Install the web site">
     <drush command="site-install" assume="yes"
       haltonerror="${drupal.site-install.haltonerror}">
       <option name="db-url" value="${drupal.db.url}" />
@@ -181,6 +199,11 @@
       <option name="strict" value="'0'" />
       <param>${drupal.profile}</param>
     </drush>
+
+    <drush command="pm-enable" assume="yes">
+      <param>features</param>
+    </drush>
+    <phingcall target="env-setup" />
 
     <!-- Fix permissions for the default site directory and settings. The 
       owner must be able to delete the directories during subsequent builds. -->
@@ -212,5 +235,30 @@
     <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
       gitPath="${system.git}" />
     <property name="targets.site-checkout.done" value="true" />
+  </target>
+
+  <target name="env-setup" depends="init" unless="project.env-setup"
+    description="Enable environment specific settings">
+    <if>
+      <and>
+        <isset property="env.modules" />
+        <not>
+          <equals arg1="${env.modules}" arg2="" />
+        </not>
+      </and>
+      <then>
+        <drush command="pm-enable" assume="yes">
+          <param>${env.modules}</param>
+        </drush>
+      </then>
+    </if>
+
+    <property name="project.env-setup" value="true" />
+  </target>
+
+  <target name="drush-fr-all" depends="init" description="Revert all features">
+    <drush command="features-revert-all" assume="yes">
+      <param>${drupal.feature_exclude}</param>
+    </drush>
   </target>
 </project>
