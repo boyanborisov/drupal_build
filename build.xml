@@ -64,7 +64,6 @@
     <mkdir dir="${project.basedir}/tmp" mode="0775" />
 
     <drush command="pm-download" assume="yes">
-      <option name="root" value="${project.basedir}" />
       <option name="drupal-project-rename" value="www" />
       <param>drupal</param>
     </drush>
@@ -261,4 +260,89 @@
       <param>${drupal.feature_exclude}</param>
     </drush>
   </target>
+
+  <target name="project-upgrade-core" depends="init"
+    description="Upgrade drupal core">
+
+  </target>
+
+  <target name="project-upgrade-module" depends="init"
+    description="Upgrade drupal module">
+    <propertyprompt propertyName="project.upgrade.module.name"
+      promptText="Which module do you want to upgrade" defaultValue="devel" />
+
+    <drush command="pm-info" returnProperty="project.upgrade.module.version">
+      <option name="fields" value="version" />
+      <option name="format" value="list" />
+      <param>${project.upgrade.module.name}</param>
+    </drush>
+    <if>
+      <istrue value="${project.upgrade.module.version}" />
+      <then>
+        <php
+          expression="reset(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));"
+          returnProperty="project.upgrade.module.tag" />
+        <php
+          expression="end(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));"
+          returnProperty="project.upgrade.module.commits" />
+        <if>
+          <equals arg1="${project.upgrade.module.tag}" arg2="${project.upgrade.module.commits}" />
+          <then>
+            <property name="project.upgrade.module.commits"
+              value="0" override="true" />
+          </then>
+        </if>
+
+        <property name="project.upgrade.module.dir"
+          value="${project.tmp}/upgrade/${project.timestamp}/${project.upgrade.module.name}" />
+        <echo>Cloning...</echo>
+        <gitclone
+          repository="git://drupalcode.org/project/${project.upgrade.module.name}.git"
+          targetPath="${project.upgrade.module.dir}" />
+        <exec level="info" dir="${project.upgrade.module.dir}"
+          checkreturn="true" passthru="true"
+          command="${system.git} checkout `git rev-list HEAD ^${project.upgrade.module.tag} | tail -${project.upgrade.module.commits} |  head -1`" />
+
+        <copy todir="${project.upgrade.module.dir}" overwrite="true">
+          <fileset
+            dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}">
+            <include name="**" />
+            <exclude name="LICENSE.txt" />
+            <exclude name="**/*.info" />
+          </fileset>
+        </copy>
+
+        <exec level="info" dir="${project.upgrade.module.dir}"
+          checkreturn="true" passthru="true"
+          command="${system.git} diff > ${project.upgrade.module.name}.patch " />
+
+        <loadfile property="project.upgrade.module.patch"
+          file="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch" />
+
+        <delete
+          dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}"
+          includeemptydirs="true" failonerror="true" />
+        <drush command="pm-download">
+          <option name="select" />
+          <param>${project.upgrade.module.name}</param>
+        </drush>
+
+        <if>
+          <istrue value="${project.upgrade.module.patch}" />
+          <then>
+            <exec level="info"
+              dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}"
+              checkreturn="true" passthru="true"
+              command="${system.git} apply -v  ${project.upgrade.module.dir}/${project.upgrade.module.name}.patch " />
+          </then>
+        </if>
+
+      </then>
+      <else>
+        <echo level="error">There is no such module found</echo>
+      </else>
+    </if>
+
+  </target>
+
 </project>
