@@ -244,7 +244,7 @@
       </filterchain>
     </property>
 
-    <echo message="Cloning... This could take a couple of minutes. Drupal is huge!" />
+    <echo message="Cloning... This could take a couple of minutes. Drupal repo is huge!" />
     <gitclone repository="git://drupalcode.org/project/drupal.git" targetPath="${project.upgrade.drupal.dir}" />
     <exec level="info" dir="${project.upgrade.drupal.dir}" checkreturn="true" passthru="true"
       command="${system.git} checkout ${project.upgrade.drupal.version}" />
@@ -301,7 +301,7 @@
     <if>
       <istrue value="${project.upgrade.drupal.patch}" />
       <then>
-        <patch haltonfailure="true" patchfile="${project.upgrade.drupal.dir}/drupal.patch" dir="${project.www}" />
+        <patch strip="1" haltonfailure="true" patchfile="${project.upgrade.drupal.dir}/drupal.patch" dir="${project.www}" />
       </then>
     </if>
   </target>
