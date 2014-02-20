@@ -319,21 +319,31 @@
         <loadfile property="project.upgrade.module.patch"
           file="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch" />
 
+        <drush command="pm-releases" returnProperty="project.upgrade.module.releases">
+          <option name="fields" value="version" />
+          <option name="format" value="csv" />
+          <param>${project.upgrade.module.name}</param>
+        </drush>
+
+        <input propertyname="project.upgrade.module.new_release"
+          validargs="${project.upgrade.module.releases}" message="Which version do you want to upgarde to" />
+    
         <delete
           dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}"
           includeemptydirs="true" failonerror="true" />
+
+
         <drush command="pm-download">
-          <option name="select" />
-          <param>${project.upgrade.module.name}</param>
+          <param>${project.upgrade.module.name}-${project.upgrade.module.new_release}</param>
         </drush>
 
         <if>
           <istrue value="${project.upgrade.module.patch}" />
           <then>
-            <exec level="info"
-              dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}"
-              checkreturn="true" passthru="true"
-              command="${system.git} apply -v  ${project.upgrade.module.dir}/${project.upgrade.module.name}.patch " />
+
+            <patch haltonfailure="true"
+              patchfile="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch"
+              dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}" />
           </then>
         </if>
 
