@@ -7,8 +7,7 @@
 
   </target>
 
-  <target name="init" depends="properties-load" unless="targets.init.done"
-    hidden="true">
+  <target name="init" depends="properties-load" unless="targets.init.done" hidden="true">
     <!-- Include phing extensions -->
     <includepath classpath="phing_ext" />
     <taskdef name="drush" classname="DrushTask" />
@@ -29,35 +28,27 @@
   </target>
 
   <!-- Load property files -->
-  <target name="properties-load" unless="targets.properties-load.done"
-    hidden="true">
+  <target name="properties-load" unless="targets.properties-load.done" hidden="true">
 
     <!-- By default use default properties file `build.default.properties` -->
-    <property file="${project.basedir}/build.default.properties"
-      override="true" />
+    <property file="${project.basedir}/build.default.properties" override="true" />
 
     <!-- Allow override using `build.properties` in build file directory -->
     <!-- Include the file after each standard properties file -->
-    <property file="${project.basedir}/build.properties"
-      override="true" />
+    <property file="${project.basedir}/build.properties" override="true" />
 
-    <!-- Allow override using `build.env.properties` in build file directory 
-      based on the environment -->
-    <property file="${project.basedir}/build.${project.env}.properties"
-      override="true" />
+    <!-- Allow override using `build.env.properties` in build file directory based on the environment -->
+    <property file="${project.basedir}/build.${project.env}.properties" override="true" />
 
     <!-- Allow override using `build.properties` in build file directory -->
     <!-- Include the file after each standard properties file -->
-    <property file="${project.basedir}/build.properties"
-      override="true" />
+    <property file="${project.basedir}/build.properties" override="true" />
 
-    <!-- Set property to prevent unnecessary additional invocations of this 
-      target -->
+    <!-- Set property to prevent unnecessary additional invocations of this target -->
     <property name="targets.properties-load.done" value="true" />
   </target>
 
-  <target name="project-create" depends="init"
-    unless="targets.project-create.done" description="Initialize a new project">
+  <target name="project-create" depends="init" unless="targets.project-create.done" description="Initialize a new project">
     <phingcall target="clean" />
 
     <!-- Create working dirs -->
@@ -75,8 +66,7 @@
     <mkdir dir="${project.www}/sites/all/modules/features" mode="0775" />
     <touch file="${project.www}/sites/all/modules/features/README.txt" />
 
-    <chmod file="${project.www}/sites/default/default.settings.php"
-      mode="0775" failonerror="true" />
+    <chmod file="${project.www}/sites/default/default.settings.php" mode="0775" failonerror="true" />
 
     <drush command="pm-download" assume="yes">
       <param>devel</param>
@@ -88,33 +78,26 @@
     <phingcall target="project-create-profile" />
 
     <gitinit repository="${project.www}" gitPath="${system.git}" />
-    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
-      create="true" gitPath="${system.git}" />
-    <exec level="info" dir="${project.www}" checkreturn="true"
-      passthru="true" command="${system.git} add ." />
-    <gitcommit repository="${project.www}" message="Init project"
-      allFiles="true" gitPath="${system.git}" />
+    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}" create="true" gitPath="${system.git}" />
+    <exec level="info" dir="${project.www}" checkreturn="true" passthru="true" command="${system.git} add ." />
+    <gitcommit repository="${project.www}" message="Init project" allFiles="true" gitPath="${system.git}" />
 
-    <exec level="info" dir="${project.www}" checkreturn="true"
-      passthru="true" command="${system.git} remote add origin ${drupal.repo_url}" />
+    <exec level="info" dir="${project.www}" checkreturn="true" passthru="true"
+      command="${system.git} remote add origin ${drupal.repo_url}" />
 
-    <gitpush repository="${project.www}"
-      refspec="${drupal.repo_branch}:${drupal.repo_branch}" destination="${drupal.repo_url}"
+    <gitpush repository="${project.www}" refspec="${drupal.repo_branch}:${drupal.repo_branch}" destination="${drupal.repo_url}"
       gitPath="${system.git}" />
 
-    <gitfetch repository="${project.www}" gitPath="${system.git}"
-      all="true" />
+    <gitfetch repository="${project.www}" gitPath="${system.git}" all="true" />
 
-    <exec level="info" dir="${project.www}" checkreturn="true"
-      passthru="true"
+    <exec level="info" dir="${project.www}" checkreturn="true" passthru="true"
       command="${system.git} branch --set-upstream-to=origin/${drupal.repo_branch} ${drupal.repo_branch}" />
 
 
     <property name="targets.project-create.done" value="true" />
   </target>
 
-  <target name="project-create-profile" depends="init"
-    unless="targets.project-create-profile.done" description="Create a custom profile based on Standard Drupal profile">
+  <target name="project-create-profile" depends="init" unless="targets.project-create-profile.done" description="Create a custom profile based on Standard Drupal profile">
 
     <copy todir="${project.www}/profiles/${drupal.profile}">
       <fileset dir="${project.www}/profiles/standard">
@@ -137,37 +120,30 @@
     <property name="targets.project-create-profile.done" value="true" />
   </target>
 
-  <target name="clean" depends="init" unless="targets.clean.done"
-    description="Clean all project files and directories">
-    <property name="clean.trash-folder"
-      value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
+  <target name="clean" depends="init" unless="targets.clean.done" description="Clean all project files and directories">
+    <property name="clean.trash-folder" value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
     <mkdir dir="${clean.trash-folder}" mode="0775" />
 
     <exec level="info" command="mv ${project.www} ${clean.trash-folder}" />
     <exec level="info" command="mv ${project.tmp} ${clean.trash-folder}" />
 
-    <delete dir="${clean.trash-folder}" includeemptydirs="true"
-      quiet="true" />
+    <delete dir="${clean.trash-folder}" includeemptydirs="true" quiet="true" />
 
     <property name="targets.clean.done" value="true" />
   </target>
 
-  <target name="clean-tmp" depends="init" unless="targets.clean-tmp.done"
-    description="Clean tmp project files and directories">
-    <property name="clean.trash-folder"
-      value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
+  <target name="clean-tmp" depends="init" unless="targets.clean-tmp.done" description="Clean tmp project files and directories">
+    <property name="clean.trash-folder" value="${system.tmp}/phing_clean_tmp_trash_${project.timestamp}" />
     <mkdir dir="${clean.trash-folder}" mode="0775" />
 
     <exec level="info" command="mv ${project.tmp} ${clean.trash-folder}" />
 
-    <delete dir="${clean.trash-folder}" includeemptydirs="true"
-      quiet="true" />
+    <delete dir="${clean.trash-folder}" includeemptydirs="true" quiet="true" />
 
     <property name="targets.clean-tmp.done" value="true" />
   </target>
 
-  <target name="site-setup" depends="init" unless="targets.site-setup.done"
-    description="Checkout the code and install the site">
+  <target name="site-setup" depends="init" unless="targets.site-setup.done" description="Checkout the code and install the site">
     <phingcall target="clean" />
     <phingcall target="site-checkout" />
     <phingcall target="site-install" />
@@ -175,8 +151,7 @@
     <property name="targets.site-setup.done" value="true" />
   </target>
 
-  <target name="site-update" depends="init" unless="targets.site-update.done"
-    description="Update the web site">
+  <target name="site-update" depends="init" unless="targets.site-update.done" description="Update the web site">
     <gitpull repository="${project.www}" gitPath="${system.git}" />
     <drush command="updatedb" assume="yes" />
     <drush command="pm-enable" assume="yes">
@@ -187,10 +162,8 @@
     <property name="targets.site-update.done" value="true" />
   </target>
 
-  <target name="site-install" depends="init" unless="targets.site-install.done"
-    description="Install the web site">
-    <drush command="site-install" assume="yes"
-      haltonerror="${drupal.site-install.haltonerror}">
+  <target name="site-install" depends="init" unless="targets.site-install.done" description="Install the web site">
+    <drush command="site-install" assume="yes" haltonerror="${drupal.site-install.haltonerror}">
       <option name="db-url" value="${drupal.db.url}" />
       <option name="locale" value="${drupal.locale}" />
       <option name="site-name" value="${drupal.sitename}" />
@@ -204,11 +177,10 @@
     </drush>
     <phingcall target="env-setup" />
 
-    <!-- Fix permissions for the default site directory and settings. The 
-      owner must be able to delete the directories during subsequent builds. -->
+    <!-- Fix permissions for the default site directory and settings. The owner must be able to delete the directories during subsequent 
+      builds. -->
     <chmod mode="0777">
-      <fileset dir="${project.www}/sites/default"
-        defaultexcludes="false">
+      <fileset dir="${project.www}/sites/default" defaultexcludes="false">
         <include name="files/**" />
         <include name="files" />
         <exclude name="files/.htaccess" />
@@ -226,18 +198,15 @@
     <property name="targets.site-install.done" value="true" />
   </target>
 
-  <target name="site-checkout" depends="init"
-    unless="targets.site-checkout.done" description="Checkout the site">
+  <target name="site-checkout" depends="init" unless="targets.site-checkout.done" description="Checkout the site">
     <phingcall target="clean" />
     <gitclone repository="${drupal.repo_url}" targetPath="${project.www}" />
 
-    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}"
-      gitPath="${system.git}" />
+    <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}" gitPath="${system.git}" />
     <property name="targets.site-checkout.done" value="true" />
   </target>
 
-  <target name="env-setup" depends="init" unless="project.env-setup"
-    description="Enable environment specific settings">
+  <target name="env-setup" depends="init" unless="project.env-setup" description="Enable environment specific settings">
     <if>
       <and>
         <isset property="env.modules" />
@@ -261,15 +230,85 @@
     </drush>
   </target>
 
-  <target name="project-upgrade-core" depends="init"
-    description="Upgrade drupal core">
+  <target name="project-upgrade-core" depends="init" description="Upgrade drupal core">
+    <property name="project.upgrade.drupal.dir" value="${project.tmp}/upgrade/${project.timestamp}/drupal_tmp" />
 
+    <drush command="status" returnProperty="project.upgrade.drupal.version">
+      <option name="fields" value="drupal-version" />
+    </drush>
+    <property name="project.upgrade.drupal.version" value="${project.upgrade.drupal.version}" override="true">
+      <filterchain>
+        <replaceregexp>
+          <regexp pattern="[^\d.]+" replace="" />
+        </replaceregexp>
+      </filterchain>
+    </property>
+
+    <echo message="Cloning... This could take a couple of minutes. Drupal is huge!" />
+    <gitclone repository="git://drupalcode.org/project/drupal.git" targetPath="${project.upgrade.drupal.dir}" />
+    <exec level="info" dir="${project.upgrade.drupal.dir}" checkreturn="true" passthru="true"
+      command="${system.git} checkout ${project.upgrade.drupal.version}" />
+
+    <copy todir="${project.upgrade.drupal.dir}" overwrite="true">
+      <fileset dir="${project.www}">
+        <include name="**" />
+        <exclude name="LICENSE.txt" />
+        <exclude name="**/*.info" />
+        <exclude name="profiles/${drupal.profile}/**" />
+        <exclude name="sites/all/**" />
+        <exclude name="sites/default/**" />
+      </fileset>
+    </copy>
+
+    <exec level="info" dir="${project.upgrade.drupal.dir}" checkreturn="true" passthru="true"
+      command="${system.git} diff > drupal.patch " />
+
+    <loadfile property="project.upgrade.drupal.patch" file="${project.upgrade.drupal.dir}/drupal.patch" />
+
+    <drush command="pm-releases" returnProperty="project.upgrade.drupal.releases">
+      <option name="fields" value="version" />
+      <option name="format" value="csv" />
+      <param>drupal</param>
+    </drush>
+
+    <input propertyname="project.upgrade.drupal.new_release" validargs="${project.upgrade.drupal.releases}" message="Which version do you want to upgarde to" />
+
+    <drush command="pm-download" assume="yes">
+      <option name="drupal-project-rename" value="drupal_new" />
+      <option name="destination" value="${project.upgrade.drupal.dir}" />
+      <param>drupal-${project.upgrade.drupal.new_release}</param>
+    </drush>
+    
+    <delete includeemptydirs="true"
+      failonerror="true">
+      <fileset dir="${project.www}" defaultexcludes="false">
+        <include name="**"/>
+        <exclude name="profiles/${drupal.profile}/**" />
+        <exclude name="sites/all/**" />
+        <exclude name="sites/default/**" />
+        <exclude name=".git/**" />
+        <exclude name=".gitignore" />
+      </fileset>
+    </delete>
+
+    
+    <copy todir="${project.www}" overwrite="true">
+      <fileset dir="${project.upgrade.drupal.dir}/drupal_new" defaultexcludes="false">
+        <include name="**" />
+      </fileset>
+    </copy>
+    
+    <if>
+      <istrue value="${project.upgrade.drupal.patch}" />
+      <then>
+        <patch haltonfailure="true" patchfile="${project.upgrade.drupal.dir}/drupal.patch" dir="${project.www}" />
+      </then>
+    </if>
   </target>
 
-  <target name="project-upgrade-module" depends="init"
-    description="Upgrade drupal module">
-    <propertyprompt propertyName="project.upgrade.module.name"
-      promptText="Which module do you want to upgrade" defaultValue="devel" />
+  <target name="project-upgrade-module" depends="init" description="Upgrade drupal module">
+    <propertyprompt propertyName="project.upgrade.module.name" promptText="Which module do you want to upgrade"
+      defaultValue="devel" />
 
     <drush command="pm-info" returnProperty="project.upgrade.module.version">
       <option name="fields" value="version" />
@@ -279,45 +318,33 @@
     <if>
       <istrue value="${project.upgrade.module.version}" />
       <then>
-        <php
-          expression="reset(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));"
-          returnProperty="project.upgrade.module.tag" />
-        <php
-          expression="end(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));"
-          returnProperty="project.upgrade.module.commits" />
+        <php expression="reset(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));" returnProperty="project.upgrade.module.tag" />
+        <php expression="end(explode('+', str_replace('-dev', '', '${project.upgrade.module.version}')));" returnProperty="project.upgrade.module.commits" />
         <if>
           <equals arg1="${project.upgrade.module.tag}" arg2="${project.upgrade.module.commits}" />
           <then>
-            <property name="project.upgrade.module.commits"
-              value="0" override="true" />
+            <property name="project.upgrade.module.commits" value="0" override="true" />
           </then>
         </if>
 
-        <property name="project.upgrade.module.dir"
-          value="${project.tmp}/upgrade/${project.timestamp}/${project.upgrade.module.name}" />
+        <property name="project.upgrade.module.dir" value="${project.tmp}/upgrade/${project.timestamp}/${project.upgrade.module.name}" />
         <echo>Cloning...</echo>
-        <gitclone
-          repository="git://drupalcode.org/project/${project.upgrade.module.name}.git"
-          targetPath="${project.upgrade.module.dir}" />
-        <exec level="info" dir="${project.upgrade.module.dir}"
-          checkreturn="true" passthru="true"
+        <gitclone repository="git://drupalcode.org/project/${project.upgrade.module.name}.git" targetPath="${project.upgrade.module.dir}" />
+        <exec level="info" dir="${project.upgrade.module.dir}" checkreturn="true" passthru="true"
           command="${system.git} checkout `git rev-list HEAD ^${project.upgrade.module.tag} | tail -${project.upgrade.module.commits} |  head -1`" />
 
         <copy todir="${project.upgrade.module.dir}" overwrite="true">
-          <fileset
-            dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}">
+          <fileset dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}">
             <include name="**" />
             <exclude name="LICENSE.txt" />
             <exclude name="**/*.info" />
           </fileset>
         </copy>
 
-        <exec level="info" dir="${project.upgrade.module.dir}"
-          checkreturn="true" passthru="true"
+        <exec level="info" dir="${project.upgrade.module.dir}" checkreturn="true" passthru="true"
           command="${system.git} diff > ${project.upgrade.module.name}.patch " />
 
-        <loadfile property="project.upgrade.module.patch"
-          file="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch" />
+        <loadfile property="project.upgrade.module.patch" file="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch" />
 
         <drush command="pm-releases" returnProperty="project.upgrade.module.releases">
           <option name="fields" value="version" />
@@ -325,24 +352,22 @@
           <param>${project.upgrade.module.name}</param>
         </drush>
 
-        <input propertyname="project.upgrade.module.new_release"
-          validargs="${project.upgrade.module.releases}" message="Which version do you want to upgarde to" />
-    
-        <delete
-          dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}"
-          includeemptydirs="true" failonerror="true" />
+        <input propertyname="project.upgrade.module.new_release" validargs="${project.upgrade.module.releases}" message="Which version do you want to upgarde to" />
+
+        <delete dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}" includeemptydirs="true"
+          failonerror="true" />
 
 
         <drush command="pm-download">
-          <param>${project.upgrade.module.name}-${project.upgrade.module.new_release}</param>
+          <param>${project.upgrade.module.name}-${project.upgrade.module.new_release}
+          </param>
         </drush>
 
         <if>
           <istrue value="${project.upgrade.module.patch}" />
           <then>
 
-            <patch haltonfailure="true"
-              patchfile="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch"
+            <patch strip="1" haltonfailure="true" patchfile="${project.upgrade.module.dir}/${project.upgrade.module.name}.patch"
               dir="${project.www}/sites/all/modules/contrib/${project.upgrade.module.name}" />
           </then>
         </if>
@@ -353,6 +378,20 @@
       </else>
     </if>
 
+  </target>
+  
+  <target  name="test" depends="init" >
+      <delete includeemptydirs="true"
+      failonerror="true">
+      <fileset dir="${project.www}" defaultexcludes="false">
+        <include name="**"/>
+        <exclude name="profiles/${drupal.profile}/**" />
+        <exclude name="sites/all/**" />
+        <exclude name="sites/default/**" />
+        <exclude name=".git/**" />
+        <exclude name=".gitignore" />
+      </fileset>
+    </delete>
   </target>
 
 </project>
