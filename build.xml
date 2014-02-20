@@ -379,19 +379,5 @@
     </if>
 
   </target>
-  
-  <target  name="test" depends="init" >
-      <delete includeemptydirs="true"
-      failonerror="true">
-      <fileset dir="${project.www}" defaultexcludes="false">
-        <include name="**"/>
-        <exclude name="profiles/${drupal.profile}/**" />
-        <exclude name="sites/all/**" />
-        <exclude name="sites/default/**" />
-        <exclude name=".git/**" />
-        <exclude name=".gitignore" />
-      </fileset>
-    </delete>
-  </target>
 
 </project>
