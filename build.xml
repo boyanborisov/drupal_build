@@ -194,6 +194,8 @@
         <include name="default" />
       </fileset>
     </chmod>
+    
+    <phingcall target="drush-fr-all" />
 
     <property name="targets.site-install.done" value="true" />
   </target>
