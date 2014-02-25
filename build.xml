@@ -74,8 +74,12 @@
     <drush command="pm-download" assume="yes">
       <param>features</param>
     </drush>
+    <drush command="pm-download" assume="yes">
+      <param>views ctools</param>
+    </drush>
 
     <phingcall target="project-create-profile" />
+    <phingcall target="drushrc-create" />
 
     <gitinit repository="${project.www}" gitPath="${system.git}" />
     <gitcheckout repository="${project.www}" branchname="${drupal.repo_branch}" create="true" gitPath="${system.git}" />
@@ -106,7 +110,6 @@
       <filterchain>
         <replaceregexp>
           <regexp pattern="standard_" replace="${drupal.profile}_" />
-          <regexp pattern="name = Standard" replace="name = ${drupal.profile}" />
         </replaceregexp>
       </filterchain>
     </copy>
@@ -116,6 +119,13 @@
       </fileset>
       <mapper type="regexp" from="^standard.([a-z]+)$" to="${drupal.profile}.\1" />
     </move>
+    <copy file="${project.basedir}/settings/propeople.info" tofile="${project.www}/profiles/${drupal.profile}/${drupal.profile}.info" overwrite="true">
+      <filterchain>
+        <replaceregexp>
+          <regexp pattern="@@name@@" replace="${drupal.profile}" />
+        </replaceregexp>
+      </filterchain>
+    </copy>
 
     <property name="targets.project-create-profile.done" value="true" />
   </target>
@@ -194,7 +204,7 @@
         <include name="default" />
       </fileset>
     </chmod>
-    
+
     <phingcall target="drush-fr-all" />
 
     <property name="targets.site-install.done" value="true" />
@@ -232,6 +242,10 @@
     </drush>
   </target>
 
+  <target name="drushrc-create" depends="init" description="Create a custom drushrc file for the site">
+    <copy file="${project.basedir}/settings/drushrc.php" todir="${project.www}/sites/default" overwrite="true" />
+  </target>
+
   <target name="project-upgrade-core" depends="init" description="Upgrade drupal core">
     <property name="project.upgrade.drupal.dir" value="${project.tmp}/upgrade/${project.timestamp}/drupal_tmp" />
 
@@ -262,8 +276,7 @@
       </fileset>
     </copy>
 
-    <exec level="info" dir="${project.upgrade.drupal.dir}" checkreturn="true" passthru="true"
-      command="${system.git} diff > drupal.patch " />
+    <exec level="info" dir="${project.upgrade.drupal.dir}" checkreturn="true" passthru="true" command="${system.git} diff > drupal.patch " />
 
     <loadfile property="project.upgrade.drupal.patch" file="${project.upgrade.drupal.dir}/drupal.patch" />
 
@@ -280,11 +293,10 @@
       <option name="destination" value="${project.upgrade.drupal.dir}" />
       <param>drupal-${project.upgrade.drupal.new_release}</param>
     </drush>
-    
-    <delete includeemptydirs="true"
-      failonerror="true">
+
+    <delete includeemptydirs="true" failonerror="true">
       <fileset dir="${project.www}" defaultexcludes="false">
-        <include name="**"/>
+        <include name="**" />
         <exclude name="profiles/${drupal.profile}/**" />
         <exclude name="sites/all/**" />
         <exclude name="sites/default/**" />
@@ -293,13 +305,13 @@
       </fileset>
     </delete>
 
-    
+
     <copy todir="${project.www}" overwrite="true">
       <fileset dir="${project.upgrade.drupal.dir}/drupal_new" defaultexcludes="false">
         <include name="**" />
       </fileset>
     </copy>
-    
+
     <if>
       <istrue value="${project.upgrade.drupal.patch}" />
       <then>
