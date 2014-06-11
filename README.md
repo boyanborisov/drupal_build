@@ -1,7 +1,7 @@
 ## Introduction
 
 Drupal build is a phing project which aims to improve performance of the drupal developer with automation of some routine tasks like create a project, update a project, upgrade drupal core.
-Also it will create one general workflow in order to improve your Continues integration.
+Also it creates a general workflow which aims to facilitate the Continuous integration (CI) workflows.
 
 Drupal build expects the drupal project to use Git as version control system and to have the following structure.
 
@@ -55,7 +55,7 @@ In order to start a new project which used Drupal build tool folow the steps:
 ```
 $ mkdir new_project
 $ cd new_project
-$ git clone git@gitlab.workingpropeople.com:continuous-integration/drupal_build.git .
+$ git clone git@github.com:boyanborisov/drupal_build.git .
 $ git checkout -b new_project
 $ git push origin new_project
 ```
@@ -64,7 +64,7 @@ $ git push origin new_project
 
 ```
 drupal.db.url = mysql://dbuser:dbpass@dbhost/dbname
-drupal.repo_url = # path to the git repo ex git://gitlab.workingpropeople.com/sandbox.git
+drupal.repo_url = # path to the git repo git@github.com:boyanborisov/sandbox.git
 ```
 
 ```
@@ -97,7 +97,7 @@ In order to setup an existing project which used Drupal build tool folow the ste
 ```
 $ mkdir new_project
 $ cd new_project
-$ git clone git@gitlab.workingpropeople.com:continuous-integration/drupal_build.git .
+$ git clone git@github.com:boyanborisov/drupal_build.git .
 $ git checkout new_project
 ```
 
@@ -105,7 +105,7 @@ $ git checkout new_project
 
 ```
 drupal.db.url = mysql://dbuser:dbpass@dbhost/dbname
-drupal.repo_url = # path to the git repo ex http://gitlab.workingpropeople.com/sandbox.git
+drupal.repo_url = # path to the git repo git@github.com:boyanborisov/sandbox.git
 ```
 
 ```
@@ -150,7 +150,7 @@ This phing target will do the following:
 ```
 $ mkdir new_project
 $ cd new_project
-$ git clone git@gitlab.workingpropeople.com:continuous-integration/drupal_build.git .
+$ git clone git@github.com:boyanborisov/drupal_build.git .
 $ git checkout -b new_project
 $ git push origin new_project
 ```
